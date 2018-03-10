@@ -7,15 +7,13 @@ At:         1:04 PM
 """
 import os, argparse
 
-import numpy as np
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
 import torch.optim as optim
 from torch.autograd import Variable
 
 from data import exp1, get_distribution_sampler, get_generator_input_sampler
-from model import Generator, Discriminator
+from models.model import Generator, Discriminator
 from utils import stats, extract, decorate_with_diffs
 
 
@@ -101,8 +99,8 @@ if __name__ == "__main__":
     g_steps = 1
     
     # ### Uncomment only one of these
-    (name, preprocess, d_input_func) = ("Raw data", lambda data: data, lambda x: x)
-    #(name, preprocess, d_input_func) = ("Data and variances", lambda data: decorate_with_diffs(data, 2.0), lambda x: x * 2)
+    #(name, preprocess, d_input_func) = ("Raw data", lambda data: data, lambda x: x)
+    (name, preprocess, d_input_func) = ("Data and variances", lambda data: decorate_with_diffs(data, 2.0), lambda x: x * 2)
     
     print("Using data [%s]" % (name))
 

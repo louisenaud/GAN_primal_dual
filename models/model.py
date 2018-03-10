@@ -10,7 +10,7 @@ import torch.nn.functional as F
 
 
 class Generator(nn.Module):
-    def __init__(self, input_size, hidden_size, output_size):
+    def __init__(self, input_size=1000, hidden_size=128, output_size=1):
         """
 
         :param input_size:
@@ -37,7 +37,7 @@ class Generator(nn.Module):
 
 
 class Discriminator(nn.Module):
-    def __init__(self, input_size, hidden_size, output_size):
+    def __init__(self, input_size=1000, hidden_size=128, output_size=1):
         """
 
         :param input_size:
@@ -52,7 +52,32 @@ class Discriminator(nn.Module):
 
     def forward(self, x):
         """
-        
+
+        :param x:
+        :return:
+        """
+        out = self.map1(x)
+        out = self.map2(out)
+        out = self.map3(out)
+        out = self.sig1(out)
+        return out
+
+
+class GAN(nn.Module):
+    def __init__(self, input_size=1000, hidden_size=128, output_size=1):
+        """
+
+        :param input_size:
+        :param hidden_size:
+        :param output_size:
+        """
+        super(GAN, self).__init__()
+        self.generator = Generator(input_size, hidden_size, output_size)
+        self.discriminator = Discriminator(input_size, hidden_size, output_size)
+
+    def forward(self, x):
+        """
+
         :param x:
         :return:
         """

@@ -90,16 +90,30 @@ class DataDistribution(object):
         self.mu = mu
         self.sigma = sigma
 
-    def sample(self, N):
-        samples = np.random.normal(self.mu, self.sigma, N)
+    def sample(self, num_points):
+        samples = np.random.normal(self.mu, self.sigma, num_points)
         samples.sort()
         return samples
 
+    def dist(self, num_points=1000, range_data=8., num_bins=100):
+        bins = np.linspace(-range_data, range_data, num_bins)
+        # data distribution
+        d = self.sample(num_points)
+        data_samples_hist, _ = np.histogram(d, bins=bins, density=True)
+        return data_samples_hist
+
 
 class GeneratorDistribution(object):
-    def __init__(self, range=8.):
-        self.range = range
+    def __init__(self, range_data=8.):
+        self.range = range_data
 
-    def sample(self, N):
-        return np.linspace(-self.range, self.range, N) + \
-            np.random.random(N) * 0.01
+    def sample(self, num_points):
+        return np.linspace(-self.range, self.range, num_points) + \
+            np.random.random(num_points) * 0.01
+
+    def dist(self, gan_model, batch, index_batch, num_points=1000, range_data=8., num_bins=100, batch_size=64):
+        bins = np.linspace(-range_data, range_data, num_bins)
+        g = np.zeros((num_points, 1))
+
+        g[batch_size * index_batch:batch_size * (index_batch + 1)] = gan_model.discriminator.forward(batch)
+        pg, _ = np.histogram(g, bins=bins, density=True)
