@@ -5,6 +5,7 @@ Created by: louise
 On:         09/03/18
 At:         1:59 PM
 """
+import os
 import numpy as np
 from matplotlib import animation
 import matplotlib.pyplot as plt
@@ -82,33 +83,38 @@ def save_animation(animation_frames, animation_path, sample_range):
     )
     anim.save(animation_path, fps=30, extra_args=['-vcodec', 'libx264'])
 
-def samples(
-    model,
-    session,
-    data,
-    sample_range,
-    batch_size,
-    num_points=10000,
-    num_bins=100
-):
 
-    xs = np.linspace(-sample_range, sample_range, num_points)
-    bins = np.linspace(-sample_range, sample_range, num_bins)
+class DisplayResults:
+    def __init__(self, num_samples, num_bins, data_range, mu, sigma):
+        self.num_samples = num_samples
+        self.num_bins = num_bins
+        self.data_range = data_range
+        self.mu = mu
+        self.sigma = sigma
 
-    # decision boundary
-    db = np.zeros((num_points, 1))
-    for i in range(num_points // batch_size):
-        db[batch_size * i:batch_size * (i + 1)] = model.discriminator.forward(data)
+    def plot_result(self, db_pre_trained, db_trained, p_data, p_gen, gen_pretrained):
+        d_x = np.linspace(-self.data_range, self.data_range, len(db_trained))
+        p_x = np.linspace(-self.data_range, self.data_range, len(p_data))
 
-    # data distribution
-    d = data.sample(num_points)
-    pd, _ = np.histogram(d, bins=bins, density=True)
+        f, ax = plt.subplots(1)
+        ax.plot(p_x, gen_pretrained, label='Pre-Trained generated data')
+        ax.plot(d_x, db_pre_trained, '--', label='Decision boundary(pre-trained)')
+        ax.plot(d_x, db_trained, label='Decision boundary')
+        ax.set_ylim(0, max(1, np.max(p_data) * 1.1))
+        ax.set_xlim(max(self.mu - self.sigma * 3, -self.data_range * 1.1),
+                    min(self.mu + self.sigma * 3, self.data_range * 1.1))
+        plt.plot(p_x, p_data, label='Real data')
+        plt.plot(p_x, p_gen, label='Generated data')
+        plt.title('1D Gaussian Approximation using vanilla GAN: ' + '(mu: %3g,' % self.mu + ' sigma: %3g)' % self.sigma)
+        plt.xlabel('Data values')
+        plt.ylabel('Probability density')
+        plt.legend(loc=1)
+        plt.grid(True)
 
-    # generated samples
-    zs = np.linspace(-sample_range, sample_range, num_points)
-    g = np.zeros((num_points, 1))
-    for i in range(num_points // batch_size):
-        g[batch_size * i:batch_size * (i + 1)] = model.discriminator.forward(data)
-    pg, _ = np.histogram(g, bins=bins, density=True)
+        # Save plot
+        save_dir = "results/"
+        if not os.path.exists(save_dir):
+            os.mkdir(save_dir)
+        plt.savefig(save_dir + '1D_Gaussian' + '_mu_%g' % self.mu + '_sigma_%g' % self.sigma + '.png')
 
-    return db, pd, pg
+        plt.show()
